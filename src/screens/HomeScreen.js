@@ -5,6 +5,7 @@ import { auth, db } from "../../firebase";
 
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
+import MapContainer from "../components/MapContainer";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 function HomeScreen({ navigation }) {
@@ -54,10 +55,7 @@ function HomeScreen({ navigation }) {
 
   
   return (
-    <SafeAreaView>
-        <Text>Home Screen</Text>
-    
-    </SafeAreaView>
+   <MapContainer/>
   );
 }
 
