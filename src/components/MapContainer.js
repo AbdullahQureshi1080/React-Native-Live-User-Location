@@ -32,7 +32,7 @@ const MapContainer = () => {
     <View style={styles.container}>
         {location && (
             <MapView
-            provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+            provider={PROVIDER_GOOGLE}
             style={styles.map}
             initialRegion={{
                 latitude: location.latitude,
