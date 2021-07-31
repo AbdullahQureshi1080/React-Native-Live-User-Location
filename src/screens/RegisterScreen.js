@@ -33,12 +33,16 @@ function RegisterScreen({ navigation }) {
       const update = {
         displayName: name,
       };
-      await auth().currentUser.updateProfile(update);
+      auth().currentUser.updateProfile(update).then(() => {
+        setTimeout(() => {
+          console.log("checking");
+          navigation.replace("Home")
+      },2000 )
+        
+      })     
     }
     if (user) {
-      updateProfile();
-      setTimeout(() => {navigation.navigate("Home")
-    },2000 )
+      updateProfile();   
     }
     else {
       // navigation.navigate("Login")

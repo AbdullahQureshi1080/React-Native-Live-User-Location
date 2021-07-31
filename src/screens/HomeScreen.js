@@ -22,13 +22,14 @@ function HomeScreen({ navigation }) {
   useEffect(() => {
     Geolocation.getCurrentPosition(
       position => {
-        const {latitude, longitude} = position.coords;
+        const { latitude, longitude } = position.coords;
         setUserLocation({
           latitude,
           longitude,
         });
         setCurrentUser(auth().currentUser)
-        userData();
+        setTimeout(()=>{userData();},1500)
+        
       },
       error => {
         console.log(error.code, error.message);
@@ -36,6 +37,7 @@ function HomeScreen({ navigation }) {
       {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
     );
   }, []);
+
 
   // signOut function
   const signOutUser = () => {
@@ -54,6 +56,9 @@ function HomeScreen({ navigation }) {
     const userId = auth().currentUser.uid;
     console.log(userId);
     
+    console.log(currentUser.displayName);
+    console.log(currentUser.email);
+    console.log(userLocation);
       database()
       .ref(`/users/${userId}`).set({
         username: currentUser.displayName,
@@ -105,7 +110,12 @@ function HomeScreen({ navigation }) {
     // console.log(reference)
 
     // Set the /users/:userId value to true
-    reference.set(true).then((res) => console.log('Online presence set',res));
+
+    reference.set({
+      username: currentUser.displayName,
+      email: currentUser.email,
+      location:userLocation,
+    }).then((res) => console.log('Online presence set',res));
 
     // Remove the node whenever the client disconnects
     reference
@@ -148,7 +158,7 @@ function HomeScreen({ navigation }) {
 
   
   return (
-   <MapContainer/>
+    <MapContainer navigation={ navigation}/>
   );
 }
 
