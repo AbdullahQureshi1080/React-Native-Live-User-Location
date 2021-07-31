@@ -28,7 +28,7 @@ const App = () => {
             headerTintColor: "#fff",
             headerTitleStyle: {
               fontWeight: "bold",
-              alignSelf: "center",
+              //alignSelf: "center",
             },
           }}
         />
