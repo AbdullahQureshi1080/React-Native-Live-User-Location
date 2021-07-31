@@ -2,26 +2,71 @@ import { Button, Image, Input } from "react-native-elements";
 import { KeyboardAvoidingView, StyleSheet, Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
 
-import { auth } from "../../firebase";
+// import { auth } from "../../firebase";
+import auth from '@react-native-firebase/auth';
 
 function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [user, setUser] = useState();
+
+
+  // useEffect(() => {
+  //   const unsubscribe = auth.onAuthStateChanged((authUser) => {
+  //     if (authUser) {
+  //       navigation.replace("Home");
+  //     }
+  //   });
+
+  //   return unsubscribe;
+  // }, []);
+
+
+  
+  function onAuthStateChanged(user) {
+    setUser(user);
+   
+
+  }
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((authUser) => {
-      if (authUser) {
-        navigation.replace("Home");
-      }
-    });
+    if (user) {
+      navigation.navigate("Home")
+    }
+    else {
+      // navigation.navigate("Login")
+    }  
+  }, [user])
 
-    return unsubscribe;
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
   }, []);
 
+
   const signIn = () => {
-    auth
-      .signInWithEmailAndPassword(email, password)
-      .catch((error) => alert(error));
+
+    auth()
+    .signInWithEmailAndPassword(email,password)
+    .then(() => {
+      console.log('User account created & signed in!');
+    })
+    .catch(error => {
+      if (error.code === 'auth/email-already-in-use') {
+        console.log('That email address is already in use!');
+      }
+  
+      if (error.code === 'auth/invalid-email') {
+        console.log('That email address is invalid!');
+      }
+  
+      console.error(error);
+    });
+
+    // auth
+    //   .signInWithEmailAndPassword(email, password)
+    //   .catch((error) => alert(error));
   };
 
   return (

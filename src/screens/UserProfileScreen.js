@@ -1,9 +1,11 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React,{useState} from 'react'
-import { auth, db } from "../../firebase";
+// import { auth, db } from "../../firebase";
+import auth from '@react-native-firebase/auth';
+
 
 export default function UserProfileScreen() {
-    const user = auth.currentUser;
+    const user = auth().currentUser;
 
     return (
         <View style={styles.container}>

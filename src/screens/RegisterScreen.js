@@ -1,28 +1,85 @@
 import { Button, Input, Text } from "react-native-elements";
 import { KeyboardAvoidingView, StyleSheet, View } from "react-native";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
+import auth from '@react-native-firebase/auth';
 
-import { auth } from "../../firebase";
+
+// import { auth } from "../../firebase";
 
 function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [user, setUser] = useState();
+
+
   
 
 
+
+  function onAuthStateChanged(user) {
+    setUser(user);
+  }
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
+  }, []);
+
+
+  useEffect(() => {
+
+    const updateProfile = async () => {
+      const update = {
+        displayName: name,
+      };
+      await auth().currentUser.updateProfile(update);
+    }
+    if (user) {
+      updateProfile();
+      setTimeout(() => {navigation.navigate("Home")
+    },2000 )
+    }
+    else {
+      // navigation.navigate("Login")
+    }  
+  }, [user])
+
+
+
+  
   const register = () => {
-    auth
-      .createUserWithEmailAndPassword(email, password)
-      .then((authUser) => {
-        authUser.user.updateProfile({
-          displayName: name,
-          email : email
+    auth()
+    .createUserWithEmailAndPassword(email,password)
+    .then(() => {
+      console.log('User account created & signed in!');
+    })
+    .catch(error => {
+      if (error.code === 'auth/email-already-in-use') {
+        console.log('That email address is already in use!');
+      }
+  
+      if (error.code === 'auth/invalid-email') {
+        console.log('That email address is invalid!');
+      }
+  
+      console.error(error);
+    });
+    }
+
+
+  // const register = () => {
+  //   auth
+  //     .createUserWithEmailAndPassword(email, password)
+  //     .then((authUser) => {
+  //       authUser.user.updateProfile({
+  //         displayName: name,
+  //         email : email
          
-        });
-      })
-      .catch((error) => alert(error.message));
-  };
+  //       });
+  //     })
+  //     .catch((error) => alert(error.message));
+  // };
 
   return (
     <KeyboardAvoidingView style={styles.container}>
