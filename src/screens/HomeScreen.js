@@ -1,142 +1,109 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
-import { SafeAreaView, StyleSheet, View } from "react-native";
-import { ScrollView, Text, TouchableOpacity } from "react-native";
-// import { auth, db } from "../../firebase";
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 
-
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import MapContainer from "../components/MapContainer";
-import Geolocation from 'react-native-geolocation-service';
-
+import MapContainer from '../components/MapContainer';
+import GetLocation from 'react-native-get-location';
 
 function HomeScreen({ navigation }) {
   const [currentUser, setCurrentUser] = useState(auth().currentUser);
-  const [userLocation, setUserLocation] = useState({
-    latitude: 33.5651,
-    longitude: 73.0169,
+  const [userLocation, setUserLocation] = useState({});
+  const [usersOnline, setUsersOnline] = useState([]);
 
-  });
-  
+  //  Setting User Reference, when location is fetched.
+
   useEffect(() => {
-    Geolocation.getCurrentPosition(
-      position => {
-        const { latitude, longitude } = position.coords;
+    GetLocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 15000,
+    })
+      .then(location => {
+        console.log(location);
+        const { latitude, longitude } = location;
         setUserLocation({
-          latitude,
-          longitude,
+          latitude: latitude,
+          longitude: longitude,
         });
-        setCurrentUser(auth().currentUser)
-        setTimeout(()=>{userData();},1500)
-        
-      },
-      error => {
-        console.log(error.code, error.message);
-      },
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-    );
+        setCurrentUser(auth().currentUser);
+        userData(latitude, longitude);
+      })
+      .catch(error => {
+        const { code, message } = error;
+        console.warn(code, message);
+      });
   }, []);
 
+  // const setting user data
 
-  // signOut function
-  const signOutUser = () => {
-
-    auth()
-  .signOut()
-      .then(() => navigation.replace("Login"));
-  };
-
-  const userProfile = () => {
-      navigation.navigate("UserProfile");
-  };
-
-
-  const userData = () => {
+  const userData = (latitude, longitude) => {
     const userId = auth().currentUser.uid;
-    console.log(userId);
-    
-    console.log(currentUser.displayName);
-    console.log(currentUser.email);
-    console.log(userLocation);
-      database()
-      .ref(`/users/${userId}`).set({
+    const reference = database().ref(`/online/${userId}`);
+    // Set the /users/:userId value to true
+    reference
+      .set({
         username: currentUser.displayName,
         email: currentUser.email,
-        location:userLocation,
-
-      });
-  
-}
-  // useEffect(() => {
-  //   const user = auth().currentUser;
-  //   const userId = auth().currentUser.uid;
-  //   console.log(userId);
-    
-  //     database()
-  //     .ref(`/users/${userId}`).set({
-  //       username: user.displayName,
-  //       email: user.email,
-  //       location:userLocation,
-
-  //     });
-   
-  // }, [])
-  
-
-
-
-  useEffect(() => {
-    // Assuming user is logged in
-    // const user = auth().currentUser;
-    const userId = auth().currentUser.uid;
-    // console.log(userId);
-    
-    //   database()
-    //   .ref(`/users/${userId}`).set({
-    //     username: user.displayName,
-    //     email: user.email,
-
-    //   });
-
-  // database()
-  // .ref(`/users/${userId}`)
-  // .on('value', snapshot => {
-  //   console.log('User data: ', snapshot.val());
-  // });
-
-
-    const reference = database().ref(`/online/${userId}`);
-    // console.log(reference)
-
-    // Set the /users/:userId value to true
-
-    reference.set({
-      username: currentUser.displayName,
-      email: currentUser.email,
-      location:userLocation,
-    }).then((res) => console.log('Online presence set',res));
+        location: { latitude: latitude, longitude: longitude },
+      })
+      .then(res => console.log('Online presence set', res));
 
     // Remove the node whenever the client disconnects
     reference
       .onDisconnect()
       .remove()
       .then(() => console.log('On disconnect function configured.'));
+  };
+
+  // signOut function
+  const signOutUser = () => {
+    auth()
+      .signOut()
+      .then(() => navigation.replace('Login'));
+  };
+
+  // navigate to user profile
+  const userProfile = () => {
+    navigation.navigate('UserProfile');
+  };
+
+  //  Getting online users
+  const getOnlineUsers = async () => {
+    database()
+      .ref('/online/')
+      .on('value', snapshot => {
+        const onlineUsers = snapshot.val();
+        console.log('online users', onlineUsers);
+        setUsersOnline(onlineUsers);
+      });
+  };
+
+  // Stop Listening
+  const stopOnlineListening = async () => {
+    database()
+      .ref('/online/')
+      .off('value', () => {
+        console.log('online listening off');
+      });
+  };
+
+  useEffect(() => {
+    getOnlineUsers();
+    return stopOnlineListening();
   }, []);
-
-
-  
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: "Home",
-      headerStyle: { backgroundColor: "#2C5F2D" },
-      headerTitleStyle: { color: "white", marginLeft: 100 },
-      headerTintColor: "black",
+      title: 'Home',
+      headerStyle: { backgroundColor: '#2C5F2D' },
+      headerTitleStyle: { color: 'white', marginLeft: 100 },
+      headerTintColor: 'black',
       headerLeft: () => (
         <View style={{ marginLeft: 20 }}>
           <TouchableOpacity onPress={userProfile} activeOpacity={0.5}>
-              <AntDesign name="user" color="white" size={24} />
+            <AntDesign name="user" color="white" size={24} />
           </TouchableOpacity>
         </View>
       ),
@@ -144,27 +111,27 @@ function HomeScreen({ navigation }) {
         <View
           style={{
             marginRight: 20,
-           
           }}
         >
           <TouchableOpacity onPress={signOutUser} activeOpacity={0.5}>
             <AntDesign name="logout" size={24} color="white" />
           </TouchableOpacity>
-         
         </View>
       ),
     });
   }, [navigation]);
 
-  
   return (
-    <MapContainer navigation={ navigation}/>
+    <MapContainer
+      navigation={navigation}
+      usersOnline={usersOnline === null ? [] : usersOnline}
+    />
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: "100%",
+    height: '100%',
   },
 });
 
